@@ -3,10 +3,15 @@ package com.ak.hadoop.loghandler.utils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.ak.hadoop.loghandler.entities.HiveCompileCommandVO;
-import com.ak.hadoop.loghandler.entities.HiveExecuteCommandVO;
-import com.ak.hadoop.loghandler.entities.HiveQueryCompletionVO;
-import com.ak.hadoop.loghandler.entities.HiveTezYarnVO;
+import com.ak.hadoop.loghandler.entities.Entity;
+import com.ak.hadoop.loghandler.entities.LogEntity;
+import com.ak.hadoop.loghandler.entities.hive.HiveCompileCommandEntity;
+import com.ak.hadoop.loghandler.entities.hive.HiveExecuteCommandEntity;
+import com.ak.hadoop.loghandler.entities.hive.HiveQueryCompletionEntity;
+import com.ak.hadoop.loghandler.entities.hive.HiveTezYarnEntity;
+import com.ak.hadoop.loghandler.entities.rm.RMStateChangeEntity;
+import com.ak.hadoop.loghandler.entities.rm.YarnApplicationAcceptedEntity;
+import com.ak.hadoop.loghandler.entities.rm.YarnAttemptRegisterEntity;
 
 public class EntityBuilder {
 
@@ -16,12 +21,77 @@ public class EntityBuilder {
 			.compile("(.*?)\\s(.*?)\\[(.*?):.*(Thread.*?)\\].*=(.*?)\\).*?:(.*)");
 	private static final Pattern HIVE_TEZ_YARN_PATTERN = Pattern.compile(
 			"(.*?)\\s(.*?)\\[(.*?):.*?(Thread.*?)\\].*?sessionName=(.*?),.*?=(.*?),.*?=(.*?)\\(S.*?context=(.*?),callerType=(.*?),.*?=(.*?)\\}");
+	private static final Pattern HIVE_QUERYCOMPLETED_PATTERN = Pattern
+			.compile("(.*?)\\s(.*?)\\s\\[(.*?):.*(Thread.*?)\\].*?queryId=(.*?)\\)");
+	private static final Pattern RM_STATECHANGE_PATTERN = Pattern
+			.compile("([0-9-\\s,:]{23})\\s([A-Z]+)\\s.*?(application_[\\d]{13}_\\d{4}).*from(.*?)to(.*?)on.*?=(.*)");
 
-	private static final Pattern HIVE_QUERYCOMPLETED_PATTERN=Pattern.compile("(.*?)\\s(.*?)\\s\\[(.*?):.*(Thread.*?)\\].*?queryId=(.*?)\\)");
-	
-	public static HiveCompileCommandVO buildHS2CompileEntity(String compileLog) {
+	private static final Pattern YARN_APPACCEPTED_PATTERN = Pattern
+			.compile("([0-9-\\s,:]{23})\\s([A-Z]+)\\s.*?(application_.*?)\\s.*?from.*?:(.*)?,.*?queue:(.*)");
+
+	private static final Pattern YARN_REGISTERATTEMPT_PATTERN = Pattern
+			.compile("([0-9-\\s,:]{23})\\s([A-Z]+)\\s.*?attempt :(.*)");
+
+	public static Entity build(LogEntity logEntity, String logLine) {
+		Entity e = null;
+		switch (logEntity) {
+
+		case HIVECOMPILE:
+			e = buildHS2CompileEntity(logLine);
+			break;
+		case HIVEEXECUTE:
+			e = buildHS2ExecuteEntity(logLine);
+			break;
+		case HIVEQUERYEND:
+			e = buildHiveQueryCompletionEntity(logLine);
+			break;
+		case HIVETEZYARN:
+			e = buildHiveTezYarnEntity(logLine);
+			break;
+		case RMSTATECHANGE:
+			e = buildRMStateChangeEntity(logLine);
+			break;
+		case YARNAPPACCEPETED:
+			e = buildYarnAppAccepted(logLine);
+			break;
+
+		case YARNREGISTERATTEMPT:
+			e = buildYarnAttemptRegisterEntity(logLine);
+			break;
+
+		}
+		return e;
+	}
+
+	private static YarnAttemptRegisterEntity buildYarnAttemptRegisterEntity(String logLine) {
+		Matcher matcher;
+		YarnAttemptRegisterEntity entity = new YarnAttemptRegisterEntity();
+		matcher = YARN_REGISTERATTEMPT_PATTERN.matcher(logLine);
+		if (matcher.matches()) {
+			entity.setDateTime(matcher.group(1));
+			entity.setLogLevel(matcher.group(2));
+			entity.setAttemptId(matcher.group(3));
+		}
+		return entity;
+	}
+
+	private static YarnApplicationAcceptedEntity buildYarnAppAccepted(String yarnAccepted) {
 		Matcher match;
-		HiveCompileCommandVO compileCommand = new HiveCompileCommandVO();
+		YarnApplicationAcceptedEntity entity = new YarnApplicationAcceptedEntity();
+		match = YARN_APPACCEPTED_PATTERN.matcher(yarnAccepted);
+		if (match.matches()) {
+			entity.setDateTime(match.group(1));
+			entity.setLogLevel(match.group(2));
+			entity.setApplicationId(match.group(3));
+			entity.setUser(match.group(4));
+			entity.setQueue(match.group(5));
+		}
+		return entity;
+	}
+
+	private static HiveCompileCommandEntity buildHS2CompileEntity(String compileLog) {
+		Matcher match;
+		HiveCompileCommandEntity compileCommand = new HiveCompileCommandEntity();
 		match = COMPILE_PATTERN.matcher(compileLog);
 		if (match.matches()) {
 			compileCommand.setDateTime(match.group(1));
@@ -36,9 +106,9 @@ public class EntityBuilder {
 
 	}
 
-	public static HiveExecuteCommandVO buildHS2ExecuteEntity(String executeLog) {
+	private static HiveExecuteCommandEntity buildHS2ExecuteEntity(String executeLog) {
 		Matcher match;
-		HiveExecuteCommandVO executeCommand = new HiveExecuteCommandVO();
+		HiveExecuteCommandEntity executeCommand = new HiveExecuteCommandEntity();
 		match = EXECUTE_PATTERN.matcher(executeLog);
 		if (match.matches()) {
 			executeCommand.setDateTime(match.group(1));
@@ -52,9 +122,9 @@ public class EntityBuilder {
 
 	}
 
-	public static HiveTezYarnVO buildHiveTezYarnEntity(String yarnTezLog) {
+	private static HiveTezYarnEntity buildHiveTezYarnEntity(String yarnTezLog) {
 		Matcher match;
-		HiveTezYarnVO yarnTezVO = new HiveTezYarnVO();
+		HiveTezYarnEntity yarnTezVO = new HiveTezYarnEntity();
 		match = HIVE_TEZ_YARN_PATTERN.matcher(yarnTezLog);
 		if (match.matches()) {
 			yarnTezVO.setDateTime(match.group(1));
@@ -72,9 +142,9 @@ public class EntityBuilder {
 		return yarnTezVO;
 	}
 
-	public static HiveQueryCompletionVO buildHiveQueryCompletionEntity(String hiveQueryCompletionLog) {
+	private static HiveQueryCompletionEntity buildHiveQueryCompletionEntity(String hiveQueryCompletionLog) {
 		Matcher match;
-		HiveQueryCompletionVO queryCompletionObj = new HiveQueryCompletionVO();
+		HiveQueryCompletionEntity queryCompletionObj = new HiveQueryCompletionEntity();
 		match = HIVE_QUERYCOMPLETED_PATTERN.matcher(hiveQueryCompletionLog);
 		if (match.matches()) {
 			queryCompletionObj.setDateTime(match.group(1));
@@ -85,5 +155,19 @@ public class EntityBuilder {
 		}
 		return queryCompletionObj;
 	}
-	
+
+	private static RMStateChangeEntity buildRMStateChangeEntity(String rmStateChangeLog) {
+		Matcher match;
+		RMStateChangeEntity rmStateChangeObj = new RMStateChangeEntity();
+		match = RM_STATECHANGE_PATTERN.matcher(rmStateChangeLog);
+		if (match.matches()) {
+			rmStateChangeObj.setDateTime(match.group(1));
+			rmStateChangeObj.setLogLevel(match.group(2));
+			rmStateChangeObj.setApplicationId(match.group(3));
+			rmStateChangeObj.setFromState(match.group(4));
+			rmStateChangeObj.setToState(match.group(5));
+			rmStateChangeObj.setEvent(match.group(6));
+		}
+		return rmStateChangeObj;
+	}
 }

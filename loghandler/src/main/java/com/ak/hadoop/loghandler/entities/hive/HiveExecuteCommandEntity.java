@@ -1,14 +1,9 @@
-package com.ak.hadoop.loghandler.entities;
+package com.ak.hadoop.loghandler.entities.hive;
 
+import com.ak.hadoop.loghandler.entities.Entity;
 import com.ak.hadoop.loghandler.utils.Utils;
 
-public class HiveQueryCompletionVO {
-
-	private String dateTime;
-	private String logLevel;
-	private String poolName;
-	private String threadId;
-	private String hiveQueryId;
+public class HiveExecuteCommandEntity implements Entity{
 
 	public String getDateTime() {
 		return dateTime;
@@ -16,14 +11,6 @@ public class HiveQueryCompletionVO {
 
 	public void setDateTime(String dateTime) {
 		this.dateTime = Utils.nullToEmpty(dateTime);
-	}
-
-	public String getLogLevel() {
-		return logLevel;
-	}
-
-	public void setLogLevel(String logLevel) {
-		this.logLevel = Utils.nullToEmpty(logLevel);
 	}
 
 	public String getPoolName() {
@@ -50,10 +37,35 @@ public class HiveQueryCompletionVO {
 		this.hiveQueryId = Utils.nullToEmpty(hiveQueryId);
 	}
 
+	public String getHiveQuery() {
+		return hiveQuery;
+	}
+
+	public void setHiveQuery(String hiveQuery) {
+		this.hiveQuery = Utils.nullToEmpty(hiveQuery);
+	}
+
+	public String getLogLevel() {
+		return logLevel;
+	}
+
+	public void setLogLevel(String logLevel) {
+		this.logLevel = Utils.nullToEmpty(logLevel);
+	}
+
+	
 	@Override
 	public String toString() {
 		return "dateTime=" + dateTime + "\nlogLevel=" + logLevel + "\npoolName=" + poolName + "\nthreadId=" + threadId
-				+ "\nhiveQueryId=" + hiveQueryId + "\n------------------------------------";
+				+ "\nhiveQueryId=" + hiveQueryId + "\nhiveQuery=" + hiveQuery
+				+ "\n------------------------------------";
 	}
+
+	private String dateTime;
+	private String logLevel;
+	private String poolName;
+	private String threadId;
+	private String hiveQueryId;
+	private String hiveQuery;
 
 }

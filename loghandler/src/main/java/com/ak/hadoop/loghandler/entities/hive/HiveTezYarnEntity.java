@@ -1,8 +1,9 @@
-package com.ak.hadoop.loghandler.entities;
+package com.ak.hadoop.loghandler.entities.hive;
 
+import com.ak.hadoop.loghandler.entities.Entity;
 import com.ak.hadoop.loghandler.utils.Utils;
 
-public class HiveTezYarnVO {
+public class HiveTezYarnEntity implements Entity{
 
 	public String getDateTime() {
 		return dateTime;

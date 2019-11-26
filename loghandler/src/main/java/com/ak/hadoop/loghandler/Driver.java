@@ -24,5 +24,7 @@ public static void main(String[] args) {
 		System.out.println(yarnAppSubmitEntity);
 		Entity yarnAppAttemptRegisterEntity = EntityBuilder.build(LogEntity.YARNREGISTERATTEMPT, "2019-11-25 15:27:50,515 INFO resourcemanager.ApplicationMasterService (ApplicationMasterService.java:registerAppAttempt(479)) - Registering app attempt : appattempt_1574693128010_0005_000001");
 		System.out.println(yarnAppAttemptRegisterEntity);
+		Entity yarnAllocationEntity = EntityBuilder.build(LogEntity.YARNALLOCATION, "2019-11-25 15:27:50,531 INFO  allocator.AbstractContainerAllocator (AbstractContainerAllocator.java:getCSAssignmentFromAllocateResult(129)) - assignedContainer application attempt=appattempt_1574693128010_0005_000001 container=null queue=default clusterResource=<memory:27648, vCores:9> type=OFF_SWITCH requestedPartition=");
+		System.out.println(yarnAllocationEntity);
 	}
 }

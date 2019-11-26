@@ -10,6 +10,7 @@ import com.ak.hadoop.loghandler.entities.hive.HiveExecuteCommandEntity;
 import com.ak.hadoop.loghandler.entities.hive.HiveQueryCompletionEntity;
 import com.ak.hadoop.loghandler.entities.hive.HiveTezYarnEntity;
 import com.ak.hadoop.loghandler.entities.rm.RMStateChangeEntity;
+import com.ak.hadoop.loghandler.entities.rm.YarnAllocationEntity;
 import com.ak.hadoop.loghandler.entities.rm.YarnApplicationAcceptedEntity;
 import com.ak.hadoop.loghandler.entities.rm.YarnAttemptRegisterEntity;
 
@@ -31,6 +32,8 @@ public class EntityBuilder {
 
 	private static final Pattern YARN_REGISTERATTEMPT_PATTERN = Pattern
 			.compile("([0-9-\\s,:]{23})\\s([A-Z]+)\\s.*?attempt :(.*)");
+
+	private static final Pattern YARN_ALLOCATION_PATTERN = Pattern.compile("([0-9-\\s,:]{23})\\s([A-Z]+)\\s.*?attempt=(.*?)container=(.*?)queue=(.*?)memory:(.*?),.*?vCores:(.*?)\\>.*?type=(.*?)\\s.*");
 
 	public static Entity build(LogEntity logEntity, String logLine) {
 		Entity e = null;
@@ -59,8 +62,34 @@ public class EntityBuilder {
 			e = buildYarnAttemptRegisterEntity(logLine);
 			break;
 
+		case YARNALLOCATION:
+			e = buildYarnAllocationEntity(logLine);
+			break;
+
 		}
 		return e;
+	}
+
+	private static YarnAllocationEntity buildYarnAllocationEntity(String logLine) {
+		
+		System.out.println(logLine);
+		
+		Matcher matcher;
+		YarnAllocationEntity entity = new YarnAllocationEntity();
+		matcher = YARN_ALLOCATION_PATTERN.matcher(logLine);
+		if (matcher.matches()) {
+			entity.setDateTime(matcher.group(1));
+			entity.setLogLevel(matcher.group(2));
+			entity.setAttemptId(matcher.group(3));
+			entity.setContainer(matcher.group(4));
+			entity.setQueue(matcher.group(5));
+			entity.setMemory(matcher.group(6));
+			entity.setvCore(matcher.group(7));
+			entity.setType(matcher.group(8));
+		}else {
+			System.out.println("No Match");
+		}
+		return entity;
 	}
 
 	private static YarnAttemptRegisterEntity buildYarnAttemptRegisterEntity(String logLine) {

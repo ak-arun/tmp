@@ -1,7 +1,14 @@
 package com.ak.hadoop.loghandler.utils;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import com.ak.hadoop.loghandler.entities.Entity;
 import com.ak.hadoop.loghandler.entities.LogEntity;
@@ -33,7 +40,7 @@ public class EntityBuilder {
 	private static final Pattern YARN_REGISTERATTEMPT_PATTERN = Pattern
 			.compile("([0-9-\\s,:]{23})\\s([A-Z]+)\\s.*?attempt :(.*)");
 
-	private static final Pattern YARN_ALLOCATION_PATTERN = Pattern.compile("([0-9-\\s,:]{23})\\s([A-Z]+)\\s.*?attempt=(.*?)container=(.*?)queue=(.*?)memory:(.*?),.*?vCores:(.*?)\\>.*?type=(.*?)\\s.*");
+	private static final Pattern YARN_ALLOCATION_PATTERN = Pattern.compile("([0-9-\\s,:]{23})\\s([A-Z]+)\\s.*?attempt=(.*?)container=(.*?)queue=(.*?)\\s.*?memory:(.*?),.*?vCores:(.*?)\\>.*?type=(.*?)\\s.*");
 
 	public static Entity build(LogEntity logEntity, String logLine) {
 		Entity e = null;
@@ -86,8 +93,6 @@ public class EntityBuilder {
 			entity.setMemory(matcher.group(6));
 			entity.setvCore(matcher.group(7));
 			entity.setType(matcher.group(8));
-		}else {
-			System.out.println("No Match");
 		}
 		return entity;
 	}
@@ -199,4 +204,57 @@ public class EntityBuilder {
 		}
 		return rmStateChangeObj;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public static String getJson(String logLine, String regex) {
+		Matcher matcher=Pattern.compile(regex).matcher(logLine);
+		int groupCount = matcher.groupCount();
+		JSONObject jsonObject = new JSONObject();
+		if(matcher.matches()) {
+			for(int i=0;i<groupCount;i++) {
+				jsonObject.put(String.valueOf(i+1),Utils.nullToEmpty(matcher.group(i+1)));
+				
+			}
+		}
+		
+		return jsonObject.toJSONString();
+	}
+	
+	public static String getJson(String logLine, String regex, String columnNames) throws ParseException {
+		List<String> columnList = Arrays.asList(columnNames.split(","));
+		String json = getJson(logLine, regex);
+		return matchIndexToColumns(json, columnList);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static String getJson(String logLine, String regex, Integer[] groupNums) {
+		List<Integer> groupList = Arrays.asList(groupNums);
+		System.out.println(groupList);
+		Collections.sort(groupList);
+		Matcher matcher=Pattern.compile(regex).matcher(logLine);
+		JSONObject jsonObject = new JSONObject();
+		if(matcher.matches()) {
+			for(Integer i : groupList) {
+				jsonObject.put(String.valueOf(i), Utils.nullToEmpty(matcher.group(i.intValue())));
+			}
+		}
+		return jsonObject.toJSONString();
+	}
+	
+	// leaving this public
+	@SuppressWarnings("unchecked")
+	public static String matchIndexToColumns(String json, List<String> columns) throws ParseException {
+		
+		JSONParser parser = new JSONParser();
+		JSONObject jsonParsed = (JSONObject) parser.parse(json);
+		JSONObject returnObj = new JSONObject();
+		int index=1;
+		for(String s : columns) {
+			returnObj.put(s.trim(), jsonParsed.get(String.valueOf(index++)));
+		}
+		
+		return returnObj.toJSONString();
+		
+	}
+	
 }

@@ -49,7 +49,7 @@ public static void main(String[] args) throws ParseException {
 		String yarnAllocationLog="2019-11-25 15:27:50,531 INFO  allocator.AbstractContainerAllocator (AbstractContainerAllocator.java:getCSAssignmentFromAllocateResult(129)) - assignedContainer application attempt=appattempt_1574693128010_0005_000001 container=null queue=default clusterResource=<memory:27648, vCores:9> type=OFF_SWITCH requestedPartition=";
 		
 		
-		// this is optional. If we can love without columns names and just go with the order of columns, we can use the getJson(logLine, patternString) method. 
+		// this is optional. If we can live without columns names and just go with the order of columns, we can use the getJson(logLine, patternString) method. 
 		String compileColumns = "dateTime,logLevel,poolUuid,poolName,threadId,hiveQueryId,hiveQuery";
 		String executeColumns="dateTime,logLevel,poolName,threadId,hiveQueryId,hiveQuery";
 		String tezYarnColumns ="dateTime,logLevel,poolName,threadId,sessionName,applicationId,dagName,context,callerType,callerId";

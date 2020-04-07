@@ -31,7 +31,7 @@ public class Shop {
     	ftl1 = new FileTemplateLoader(new File("/opt/customwebapp/templates"));
     	MultiTemplateLoader mtl = new MultiTemplateLoader(new TemplateLoader[] { ftl1 });
         configuration.setTemplateLoader(mtl);
-        port(11223);
+        port(80);
         get("/",(request,response) -> {
         	id = new Random().ints(97, 123)
                     .limit(5)

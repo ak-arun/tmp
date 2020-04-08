@@ -1,0 +1,20 @@
+{
+	"cloudwatch.emitMetrics": true,
+	"kinesis.endpoint": "kinesis.us-east-2.amazonaws.com",
+	"firehose.endpoint": "firehose.us-east-2.amazonaws.com",
+
+	"flows": [
+
+		{
+			"filePattern": "/opt/customwebapp/logs/access-*",
+			"deliveryStream": "raw_dev_oktank"
+		}, {
+			"filePattern": "/opt/customwebapp/logs/access-*",
+			"kinesisStream": "stream_dev_oktank",
+			"dataProcessingOptions": [{
+				"optionName": "LOGTOJSON",
+				"logFormat": "COMBINEDAPACHELOG"
+			}]
+		}
+	]
+}
